@@ -1,5 +1,5 @@
 import streamlit as st
-from data_fetcher import league_standings_data, ovr_rating, get_recent_scores, get_team_shot_data
+from data_fetcher import league_standings_data, ovr_rating, get_recent_scores, get_team_shot_data, get_lineup, get_player_stats
 import plotly.graph_objects as go
 
 def draw_court(fig):
@@ -62,8 +62,10 @@ def draw_court(fig):
 
 def render_dashboard(team_id, team_name, primary_color, secondary_color):
     
-    # Get standings data
+    # Get data
+    playerstat = get_player_stats(team_id)
     standings = league_standings_data(team_id)
+    lineup = get_lineup(team_id)
     rating = ovr_rating(team_id)
     record = standings['Record'].values[0]
     rank = standings['PlayoffRank'].values[0]
@@ -76,16 +78,17 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
     missY = miss["LOC_Y"]
     
     
-        # Header row: Title on the left, overview "card" on the right
-    title_col, card_col = st.columns([2.2, 1.4], vertical_alignment="center")
+    #Title/header
+    title_col, lineup_col, card_col = st.columns([1, 2, 1.5], vertical_alignment="center")
 
     with title_col:
-        # Smaller, more resume-friendly title
+
         st.markdown("#### NBA Analytics Hub")
 
-        # BIG team name (this becomes the “hero” text)
         st.markdown(f"# {team_name}")
 
+    with lineup_col:
+        st.table(lineup[["Plus Minus", "Line up"]].head(3), border="horizontal")
 
     with card_col:
         with st.container(border=True):
@@ -96,7 +99,7 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
             m3.metric("Net Rating", netrating)
 
     # Main Dashboard - 3 Column Layout
-    left_col, center_col, right_col = st.columns([3, 2, 1.2])
+    left_col, center_col = st.columns([1, 1])
 
     with left_col:
         
@@ -117,10 +120,10 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
         ))
 
         fig.update_layout(
-            barmode = 'group',                # Side-by-side bars
+            barmode = 'group',                
             xaxis_title = 'Date',
             yaxis_title = 'Points',
-            height = 420,                     # Chart height in pixels
+            height = 420,                     
             showlegend = True
         )
 
@@ -152,7 +155,17 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
 
         st.plotly_chart(fig, use_container_width=True)
 
+    left_col1, right_col = st.columns([1,1])
+
+    with left_col1:
+        option = st.selectbox(
+            "Player Explorer",
+            playerstat[['Player']]
+        )
+
+        st.table(playerstat.loc[playerstat["Player"] == option],border="horizontal")
+
+
         
     
-    with right_col:
-        pass
+    
