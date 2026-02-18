@@ -162,7 +162,7 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
             "Player Explorer",
             playerstat[['Player']]
         )
-
+#tesing
         st.table(playerstat.loc[playerstat["Player"] == option],border="horizontal")
 
 
