@@ -14,9 +14,9 @@ from pandasgui import show
 @st.cache_data
 def get_next_back_to_back(team):
     schedule_df = pd.read_csv("nbaschedule.csv")
-    schedule_df["Date"] = pd.to_datetime(schedule_df["Date"], format="%d/%m/%Y %H:%M")
+    schedule_df["Date"] = pd.to_datetime(schedule_df["Date"], format="%d/%m/%Y %H:%M").dt.tz_localize('UTC').dt.tz_convert('America/Chicago')
     team_games = schedule_df[(schedule_df["Home Team"] == team) | (schedule_df["Away Team"] == team)].copy()
-    today = pd.Timestamp(date.today())
+    today = pd.Timestamp(date.today(), tz='America/Chicago')
     upcoming = team_games[team_games["Date"] >= today].sort_values("Date").reset_index(drop=True)
     if upcoming.empty:
         print(f"No upcoming games found for '{team}'.")

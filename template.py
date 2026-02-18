@@ -1,5 +1,5 @@
 import streamlit as st
-from data_fetcher import league_standings_data, ovr_rating, get_recent_scores, get_team_shot_data, get_lineup, get_player_stats
+from data_fetcher import league_standings_data, ovr_rating, get_recent_scores, get_team_shot_data, get_lineup, get_player_stats, get_next_back_to_back
 import plotly.graph_objects as go
 
 def draw_court(fig):
@@ -63,12 +63,16 @@ def draw_court(fig):
 def render_dashboard(team_id, team_name, primary_color, secondary_color):
     
     # Get data
+    back2back = get_next_back_to_back(team_name)
     playerstat = get_player_stats(team_id)
     standings = league_standings_data(team_id)
     lineup = get_lineup(team_id)
     rating = ovr_rating(team_id)
     record = standings['Record'].values[0]
     rank = standings['PlayoffRank'].values[0]
+    firstdate = back2back["Date"].dt.strftime("%m/%d").values[0]
+    seconddate = back2back["Date"].dt.strftime("%m/%d").values[1]
+    back2backdate = f'{firstdate} — {seconddate}'
     netrating = rating["NET_RATING"]
     recent_games = get_recent_scores(team_id)
     made, miss = get_team_shot_data(team_id)
@@ -79,7 +83,7 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
     
     
     #Title/header
-    title_col, lineup_col, card_col = st.columns([1, 2, 1.5], vertical_alignment="center")
+    title_col, lineup_col, card_col = st.columns([1, 2, 1.7], vertical_alignment="center")
 
     with title_col:
 
@@ -93,16 +97,18 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
     with card_col:
         with st.container(border=True):
             st.markdown("**Team Overview**")
-            m1, m2, m3 = st.columns(3)
+            m1, m2 = st.columns(2)
+            m3, m4 = st.columns(2)
             m1.metric("Record", record)
             m2.metric("Rank", f"#{rank}")
-            m3.metric("Net Rating", netrating)
+            m3.metric("Next Back to Back", back2backdate)                     
+            m4.metric("Net Rating", netrating)
 
     # Main Dashboard - 3 Column Layout
     left_col, center_col = st.columns([1, 1])
 
     with left_col:
-        
+        st.markdown("**Last 10 Games**",text_alignment="center")
         fig = go.Figure()
 
         fig.add_trace(go.Bar(
@@ -130,6 +136,7 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
         st.plotly_chart(fig, use_container_width=True)
     
     with center_col:
+        st.markdown("**Shot Map**", text_alignment="center")
         fig = go.Figure()
 
         fig.add_trace(
@@ -159,7 +166,7 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
 
     with left_col1:
         option = st.selectbox(
-            "Player Explorer",
+            "**Player Explorer**",
             playerstat[['Player']]
         )
 

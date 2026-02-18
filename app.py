@@ -9,7 +9,6 @@ st.sidebar.header("Select Team")
 
 # Create a list of team names for the dropdown
 team_names = [team[abbrev]['name'] for abbrev in team.keys()]
-print(team_names)
 
 # Let user select a team
 selected_team_name = st.sidebar.selectbox(
