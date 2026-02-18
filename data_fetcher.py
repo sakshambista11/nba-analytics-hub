@@ -8,7 +8,6 @@ from nba_api.stats.endpoints import TeamDashLineups
 from nba_api.stats.endpoints import TeamPlayerDashboard
 from nba_api.stats.endpoints import LeagueDashTeamStats
 from nba_api.stats.static import teams
-from pandasgui import show
 
 
 @st.cache_data
@@ -90,7 +89,6 @@ def get_player_stats(team_id):
     playerstats_df["Player"] = playerstats_df["PLAYER_NAME"]
     return playerstats_df[["Player",'PTS','REB','AST','STL','BLK','FG_PCT','FG3_PCT','TOV']]
 
-#show(get_player_stats(1610612747))
 
 @st.cache_data
 def get_rank():
