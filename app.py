@@ -2,7 +2,7 @@ import streamlit as st
 from team_config import team
 from template import render_dashboard
 
-st.set_page_config(page_title="NBA 360° Analytics Hub", layout="wide")
+st.set_page_config(page_title="NBA 360 Analytics Hub", layout="wide")
 
 # Sidebar - Team Selection
 st.sidebar.header("Select Team")
