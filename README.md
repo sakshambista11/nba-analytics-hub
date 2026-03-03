@@ -31,4 +31,6 @@ This tool allows users to analyze NBA teams beyond basic box scores. Built on a 
 3. Run the app: `streamlit run app.py`
 
 ---
-*Created by [Saksham Bista] - University of Texas at Austin, Class of 2029*
+*Created by Saksham Bista - University of Texas at Austin, Class of 2029*
+
+https://nba-analytics-app.streamlit.app/
