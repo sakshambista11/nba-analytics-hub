@@ -70,9 +70,12 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
     rating = ovr_rating(team_id)
     record = standings['Record'].values[0]
     rank = standings['PlayoffRank'].values[0]
-    firstdate = back2back["Date"].dt.strftime("%m/%d").values[0]
-    seconddate = back2back["Date"].dt.strftime("%m/%d").values[1]
-    back2backdate = f'{firstdate} — {seconddate}'
+    if back2back is None:
+        back2backdate = "Season ended"
+    else:
+        firstdate = back2back["Date"].dt.strftime("%m/%d").values[0]
+        seconddate = back2back["Date"].dt.strftime("%m/%d").values[1]
+        back2backdate = f'{firstdate} — {seconddate}'
     netrating = rating["NET_RATING"]
     recent_games = get_recent_scores(team_id)
     made, miss = get_team_shot_data(team_id)
