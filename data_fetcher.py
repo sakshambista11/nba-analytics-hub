@@ -20,6 +20,16 @@ from nba_api.stats.static import teams
 
 @st.cache_data
 def get_next_back_to_back(team):
+    """
+    Finds the next back-to-back game pair for a given team.
+
+    Args:
+        team (str): Full team name (e.g., 'Dallas Mavericks').
+
+    Returns:
+        pd.DataFrame: Two-row DataFrame with the back-to-back games,
+                      or None if no upcoming back-to-backs exist.
+    """
     schedule_df = pd.read_csv("nbaschedule.csv")
     schedule_df["Date"] = pd.to_datetime(schedule_df["Date"], format="%d/%m/%Y %H:%M").dt.tz_localize('UTC').dt.tz_convert('America/Chicago')
     team_games = schedule_df[(schedule_df["Home Team"] == team) | (schedule_df["Away Team"] == team)].copy()
@@ -41,13 +51,35 @@ def get_next_back_to_back(team):
 
 @st.cache_data
 def ovr_rating(team_id):
+    """
+    Fetches offensive, defensive, and net rating for a team.
+
+    Args:
+        team_id (int): NBA Stats team ID.
+
+    Returns:
+        pd.DataFrame: Single-row DataFrame with OFF_RATING, DEF_RATING, NET_RATING.
+    """
     standings = LeagueDashTeamStats( team_id_nullable=team_id, season='2025-26', measure_type_detailed_defense="Advanced")
     standings_df=standings.get_data_frames()[0]
     return standings_df[['OFF_RATING',"DEF_RATING","NET_RATING"]]
 
+
 @st.cache_data
 #Calculates rolling net efficiency from advanced stats endpoint
 def get_rolling_efficiency(team_id, season='2025-26', window=5):
+    """
+    Calculates rolling net efficiency from advanced game logs.
+
+    Args:
+        team_id (int): NBA Stats team ID.
+        season (str): Season string in 'YYYY-YY' format. Defaults to '2025-26'.
+        window (int): Rolling average window size. Defaults to 5.
+
+    Returns:
+        pd.DataFrame: Columns ['GAME_DATE', 'NET_RATING', 'ROLLING_NET_RTG'],
+                      sorted chronologically.
+    """
     log = TeamGameLogs(team_id_nullable=team_id, season_nullable=season, measure_type_player_game_logs_nullable="Advanced")
     df = log.get_data_frames()[0]
     df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE'])
@@ -57,6 +89,16 @@ def get_rolling_efficiency(team_id, season='2025-26', window=5):
 
 @st.cache_data
 def get_team_shot_data(team_id):
+    """
+    Fetches all field goal attempts for a team and splits by outcome.
+
+    Args:
+        team_id (int): NBA Stats team ID.
+
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame]: (made_shots, missed_shots),
+        each with full ShotChartDetail columns including LOC_X and LOC_Y.
+    """
     gameshots = ShotChartDetail(team_id=team_id, player_id=0,context_measure_simple='FGA',season_nullable='2025-26')
     gameshots_df = gameshots.get_data_frames()[0]
     missed = gameshots_df[gameshots_df["SHOT_MADE_FLAG"] == 0]
@@ -65,6 +107,15 @@ def get_team_shot_data(team_id):
 
 @st.cache_data
 def league_standings_data(team_id):
+    """
+    Fetches a team's current record and playoff seeding.
+
+    Args:
+        team_id (int): NBA Stats team ID.
+
+    Returns:
+        pd.DataFrame: Single-row DataFrame with 'Record' and 'PlayoffRank'.
+    """
     standings = LeagueStandings(season='2025-26')
     standings_df=standings.get_data_frames()[0]
     team_stats = standings_df[standings_df['TeamID'] == team_id] 
@@ -72,7 +123,17 @@ def league_standings_data(team_id):
 
 
 @st.cache_data
-def get_lineup (team_id):
+def get_lineup(team_id):
+    """
+    Fetches the top 5-man lineups for a team, sorted by plus/minus.
+
+    Args:
+        team_id (int): NBA Stats team ID.
+
+    Returns:
+        pd.DataFrame: Columns ['Plus Minus', 'Line up', 'MIN'],
+                      sorted descending by plus/minus.
+    """
     lineup = TeamDashLineups(team_id=team_id, group_quantity=5, season='2025-26')
     lineup_df = lineup.get_data_frames()[1]
     lineup_df = lineup_df.sort_values(by='PLUS_MINUS', ascending=False).reset_index()
@@ -83,6 +144,16 @@ def get_lineup (team_id):
 
 @st.cache_data
 def get_recent_scores(team_id):
+    """
+    Fetches the last 10 game scores for a team in chronological order.
+
+    Args:
+        team_id (int): NBA Stats team ID.
+
+    Returns:
+        pd.DataFrame: Columns ['PTS', 'oppscore', 'GAME_DATE', 'WL'],
+                      oldest to newest (reversed for charting).
+    """
     games = TeamGameLogs(season_nullable="2025-26", team_id_nullable=team_id, measure_type_player_game_logs_nullable='Base')
     games_df = games.get_data_frames()[0]
     games_df["GAME_DATE"] = pd.to_datetime(games_df["GAME_DATE"])
@@ -92,6 +163,16 @@ def get_recent_scores(team_id):
 
 @st.cache_data
 def get_player_stats(team_id):
+    """
+    Fetches per-game stats for all players on a team's roster.
+
+    Args:
+        team_id (int): NBA Stats team ID.
+
+    Returns:
+        pd.DataFrame: Columns ['Player', 'PTS', 'REB', 'AST', 'STL',
+                      'BLK', 'FG_PCT', 'FG3_PCT', 'TOV'].
+    """
     playerstats = TeamPlayerDashboard(season="2025-26", team_id=team_id, per_mode_detailed="PerGame")
     playerstats_df = playerstats.get_data_frames()[1]
     playerstats_df["Player"] = playerstats_df["PLAYER_NAME"]
@@ -100,6 +181,13 @@ def get_player_stats(team_id):
 
 @st.cache_data
 def get_rank():
+    """
+    Fetches current league standings split by conference.
+
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+            (overall_standings, west_standings, east_standings).
+    """
     ranking = LeagueStandings(season="2025-26")
     overall = ranking.get_data_frames()[0]
     west=overall[overall["Conference"] == "West"]
@@ -108,6 +196,15 @@ def get_rank():
 
 @st.cache_data
 def get_advanced_player_stats(team_id):
+    """
+    Fetches advanced efficiency metrics for all players on a team.
+
+    Args:
+        team_id (int): NBA Stats team ID.
+
+    Returns:
+        pd.DataFrame: Columns ['PLAYER_NAME', 'GP', 'USG_PCT', 'TS_PCT'].
+    """
     stats = TeamPlayerDashboard(season="2025-26", team_id=team_id, measure_type_detailed_defense='Advanced')
     stats_df = stats.get_data_frames()[1]
     return stats_df[['PLAYER_NAME','GP','USG_PCT','TS_PCT']]
