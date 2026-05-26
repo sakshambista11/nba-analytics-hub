@@ -4,8 +4,6 @@
 
 A real-time NBA team analytics dashboard that goes beyond the box score — visualizing shot quality, lineup efficiency, and schedule fatigue for all 30 teams, pulled live from the NBA Stats API.
 
-![Dashboard Preview](assets/dashboard_preview.png)
-
 ## Project Overview
 Built on a **Single-Template Architecture**: one master layout programmatically generates 30 unique, team-branded dashboards. Selecting a team re-fetches live data and re-renders every chart — standings, shot charts, lineup plus/minus, and scoring trends — with that team's colors applied throughout.
 
