@@ -1,3 +1,11 @@
+from nba_api.stats.library.http import NBAStatsHTTP
+NBAStatsHTTP.headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': 'https://www.nba.com/',
+    'Origin': 'https://www.nba.com',
+}
 import pandas as pd
 from datetime import date
 import streamlit as st
