@@ -1,4 +1,5 @@
 from nba_api.stats.library.http import NBAStatsHTTP
+from pathlib import Path
 
 CURRENT_SEASON = "2025-26"
 
@@ -32,7 +33,7 @@ def get_next_back_to_back(team):
         pd.DataFrame: Two-row DataFrame with the back-to-back games,
                       or None if no upcoming back-to-backs exist.
     """
-    schedule_df = pd.read_csv("nbaschedule.csv")
+    schedule_df = pd.read_csv(Path(__file__).parent / "nbaschedule.csv")
     schedule_df["Date"] = pd.to_datetime(schedule_df["Date"], format="%d/%m/%Y %H:%M").dt.tz_localize('UTC').dt.tz_convert('America/Chicago')
     team_games = schedule_df[(schedule_df["Home Team"] == team) | (schedule_df["Away Team"] == team)].copy()
     today = pd.Timestamp(date.today(), tz='America/Chicago')
