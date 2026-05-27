@@ -18,7 +18,7 @@ Built on a **Single-Template Architecture**: one master layout programmatically 
 ## Tech Stack
 | Layer | Tool |
 |---|---|
-| Language | Python 3.11 |
+| Language | Python 3.13.1 |
 | Framework | Streamlit |
 | Data Source | `nba_api` (NBA Stats endpoints) |
 | Visualization | Plotly Graph Objects |
