@@ -63,26 +63,26 @@ def draw_court(fig):
 def render_dashboard(team_id, team_name, primary_color, secondary_color):
     
     # Get data
-    back2back = get_next_back_to_back(team_name)
+    back_to_back = get_next_back_to_back(team_name)
     playerstat = get_player_stats(team_id)
     standings = league_standings_data(team_id)
     lineup = get_lineup(team_id)
     rating = ovr_rating(team_id)
     record = standings['Record'].values[0]
     rank = standings['PlayoffRank'].values[0]
-    if back2back is None:
-        back2backdate = "Season ended"
+    if back_to_back is None:
+        back_to_back_date = "Season ended"
     else:
-        firstdate = back2back["Date"].dt.strftime("%m/%d").values[0]
-        seconddate = back2back["Date"].dt.strftime("%m/%d").values[1]
-        back2backdate = f'{firstdate} — {seconddate}'
+        firstdate = back_to_back["Date"].dt.strftime("%m/%d").values[0]
+        seconddate = back_to_back["Date"].dt.strftime("%m/%d").values[1]
+        back_to_back_date = f'{firstdate} — {seconddate}'
     netrating = rating["NET_RATING"]
     recent_games = get_recent_scores(team_id)
     made, miss = get_team_shot_data(team_id)
-    madeX = made["LOC_X"]
-    madeY = made["LOC_Y"]
-    missX = miss["LOC_X"]
-    missY = miss["LOC_Y"]
+    made_x = made["LOC_X"]
+    made_y = made["LOC_Y"]
+    miss_x = miss["LOC_X"]
+    miss_y = miss["LOC_Y"]
     
     
     #Title/header
@@ -100,12 +100,12 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
     with card_col:
         with st.container(border=True):
             st.markdown("**Team Overview**")
-            m1, m2 = st.columns(2)
-            m3, m4 = st.columns(2)
-            m1.metric("Record", record)
-            m2.metric("Rank", f"#{rank}")
-            m3.metric("Next Back to Back", back2backdate)                     
-            m4.metric("Net Rating", netrating)
+            record_col, rank_col = st.columns(2)
+            b2b_col, rating_col = st.columns(2)
+            record_col.metric("Record", record)
+            rank_col.metric("Rank", f"#{rank}")
+            b2b_col.metric("Next Back to Back", back_to_back_date)
+            rating_col.metric("Net Rating", netrating)
 
     # Main Dashboard - 3 Column Layout
     left_col, center_col = st.columns([1, 1])
@@ -144,8 +144,8 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
 
         fig.add_trace(
             go.Scatter(
-                x = madeX,
-                y = madeY,
+                x = made_x,
+                y = made_y,
                 mode="markers",
                 name="Made",
                 marker = dict(color=primary_color,opacity=0.5, line = dict(color = "white", width = 0.5))
@@ -154,8 +154,8 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
 
         fig.add_trace(
             go.Scatter(
-                x = missX,
-                y = missY,
+                x = miss_x,
+                y = miss_y,
                 mode="markers",
                 name="Miss",
                 marker=dict(symbol='star',color=secondary_color,opacity=0.5)
@@ -165,9 +165,9 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
 
         st.plotly_chart(fig, use_container_width=True)
 
-    left_col1, right_col = st.columns([1,1])
+    player_col, right_col = st.columns([1,1])
 
-    with left_col1:
+    with player_col:
         option = st.selectbox(
             "**Player Explorer**",
             playerstat[['Player']]

@@ -16,8 +16,9 @@ selected_team_name = st.sidebar.selectbox(
     team_names
 )
 
-selected_team_id = next(team[abbrev]['id'] for abbrev in team if team[abbrev]['name']==selected_team_name)
-selected_team_primary = next(team[abbrev]["primary"] for abbrev in team if team[abbrev]['name']==selected_team_name)
-selected_team_secondary = next(team[abbrev]["secondary"] for abbrev in team if team[abbrev]['name']==selected_team_name)
+selected_team_abbrev = next(abbrev for abbrev in team if team[abbrev]['name'] == selected_team_name)
+selected_team_id = team[selected_team_abbrev]['id']
+selected_team_primary = team[selected_team_abbrev]['primary']
+selected_team_secondary = team[selected_team_abbrev]['secondary']
 
 render_dashboard(selected_team_id, selected_team_name, selected_team_primary, selected_team_secondary)
