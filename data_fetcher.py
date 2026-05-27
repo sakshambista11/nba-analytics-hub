@@ -1,4 +1,7 @@
 from nba_api.stats.library.http import NBAStatsHTTP
+
+CURRENT_SEASON = "2025-26"
+
 NBAStatsHTTP.headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Accept': 'application/json, text/plain, */*',
@@ -59,7 +62,7 @@ def ovr_rating(team_id):
     Returns:
         pd.DataFrame: Single-row DataFrame with OFF_RATING, DEF_RATING, NET_RATING.
     """
-    standings = LeagueDashTeamStats( team_id_nullable=team_id, season='2025-26', measure_type_detailed_defense="Advanced")
+    standings = LeagueDashTeamStats( team_id_nullable=team_id, season=CURRENT_SEASON, measure_type_detailed_defense="Advanced")
     standings_df=standings.get_data_frames()[0]
     return standings_df[['OFF_RATING',"DEF_RATING","NET_RATING"]]
 
@@ -77,7 +80,7 @@ def get_team_shot_data(team_id):
         tuple[pd.DataFrame, pd.DataFrame]: (made_shots, missed_shots),
         each with full ShotChartDetail columns including LOC_X and LOC_Y.
     """
-    gameshots = ShotChartDetail(team_id=team_id, player_id=0,context_measure_simple='FGA',season_nullable='2025-26')
+    gameshots = ShotChartDetail(team_id=team_id, player_id=0,context_measure_simple='FGA',season_nullable=CURRENT_SEASON)
     gameshots_df = gameshots.get_data_frames()[0]
     missed = gameshots_df[gameshots_df["SHOT_MADE_FLAG"] == 0]
     made = gameshots_df[gameshots_df["SHOT_MADE_FLAG"] == 1]
@@ -94,7 +97,7 @@ def league_standings_data(team_id):
     Returns:
         pd.DataFrame: Single-row DataFrame with 'Record' and 'PlayoffRank'.
     """
-    standings = LeagueStandings(season='2025-26')
+    standings = LeagueStandings(season=CURRENT_SEASON)
     standings_df=standings.get_data_frames()[0]
     team_stats = standings_df[standings_df['TeamID'] == team_id] 
     return team_stats[['Record', 'PlayoffRank']]
@@ -112,7 +115,7 @@ def get_lineup(team_id):
         pd.DataFrame: Columns ['Plus Minus', 'Line up', 'MIN'],
                       sorted descending by plus/minus.
     """
-    lineup = TeamDashLineups(team_id=team_id, group_quantity=5, season='2025-26')
+    lineup = TeamDashLineups(team_id=team_id, group_quantity=5, season=CURRENT_SEASON)
     lineup_df = lineup.get_data_frames()[1]
     lineup_df = lineup_df.sort_values(by='PLUS_MINUS', ascending=False).reset_index()
     lineup_df["Plus Minus"] = lineup_df['PLUS_MINUS'].astype(int)
@@ -132,7 +135,7 @@ def get_recent_scores(team_id):
         pd.DataFrame: Columns ['PTS', 'oppscore', 'GAME_DATE', 'WL'],
                       oldest to newest (reversed for charting).
     """
-    games = TeamGameLogs(season_nullable="2025-26", team_id_nullable=team_id, measure_type_player_game_logs_nullable='Base')
+    games = TeamGameLogs(season_nullable=CURRENT_SEASON, team_id_nullable=team_id, measure_type_player_game_logs_nullable='Base')
     games_df = games.get_data_frames()[0]
     games_df["GAME_DATE"] = pd.to_datetime(games_df["GAME_DATE"])
     games_df["GAME_DATE"] = games_df["GAME_DATE"].dt.strftime("%m/%d")
@@ -151,7 +154,7 @@ def get_player_stats(team_id):
         pd.DataFrame: Columns ['Player', 'PTS', 'REB', 'AST', 'STL',
                       'BLK', 'FG_PCT', 'FG3_PCT', 'TOV'].
     """
-    playerstats = TeamPlayerDashboard(season="2025-26", team_id=team_id, per_mode_detailed="PerGame")
+    playerstats = TeamPlayerDashboard(season=CURRENT_SEASON, team_id=team_id, per_mode_detailed="PerGame")
     playerstats_df = playerstats.get_data_frames()[1]
     playerstats_df["Player"] = playerstats_df["PLAYER_NAME"]
     return playerstats_df[["Player",'PTS','REB','AST','STL','BLK','FG_PCT','FG3_PCT','TOV']]
