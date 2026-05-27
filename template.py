@@ -3,8 +3,13 @@ from data_fetcher import league_standings_data, ovr_rating, get_recent_scores, g
 import plotly.graph_objects as go
 
 def draw_court(fig):
-    # Court dimensions (in feet, scaled by 10 for NBA API units)
-    # Hoop is at (0,0) usually, but visual needs to match data coordinates
+    """
+    Draws NBA half-court lines and markings onto a Plotly figure.
+
+    Args:
+        fig (go.Figure): Plotly figure to draw the court on.
+        Court coordinates match the NBA Stats API LOC_X / LOC_Y scale.
+    """
     
     court_shapes = [
         # 1. Outer Court Boundary (Half Court)
@@ -61,8 +66,17 @@ def draw_court(fig):
 
 
 def render_dashboard(team_id, team_name, primary_color, secondary_color):
+    """
+    Renders the full team dashboard including standings, shot chart,
+    recent scores, lineup analysis, and player stats.
+
+    Args:
+        team_id (int): NBA Stats team ID.
+        team_name (str): Full team name (e.g., 'Dallas Mavericks').
+        primary_color (str): Team primary hex color for chart theming.
+        secondary_color (str): Team secondary hex color for chart theming.
+    """
     
-    # Get data
     back_to_back = get_next_back_to_back(team_name)
     playerstat = get_player_stats(team_id)
     standings = league_standings_data(team_id)
