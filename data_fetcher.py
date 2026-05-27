@@ -35,7 +35,7 @@ def get_next_back_to_back(team):
     today = pd.Timestamp(date.today(), tz='America/Chicago')
     upcoming = team_games[team_games["Date"] >= today].sort_values("Date").reset_index(drop=True)
     if upcoming.empty:
-        print(f"No upcoming games found for '{team}'.")
+        st.warning(f"No upcoming games found for '{team}'.")
         return None
     upcoming["_game_date"] = upcoming["Date"].dt.date
     for i in range(len(upcoming) - 1):
@@ -43,7 +43,7 @@ def get_next_back_to_back(team):
         day_b = upcoming.loc[i + 1, "_game_date"]
         if (day_b - day_a).days == 1:
             return upcoming.loc[[i, i + 1]].drop(columns="_game_date").reset_index(drop=True)
-    print(f"No upcoming back-to-backs found for '{team}'.")
+    st.warning(f"No upcoming back-to-backs found for '{team}'.")
     return None
 
 
