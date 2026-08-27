@@ -1,15 +1,7 @@
-from nba_api.stats.library.http import NBAStatsHTTP
 from pathlib import Path
 
 CURRENT_SEASON = "2025-26"
 
-NBAStatsHTTP.headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Referer': 'https://www.nba.com/',
-    'Origin': 'https://www.nba.com',
-}
 import pandas as pd
 from datetime import date
 import streamlit as st
@@ -159,7 +151,6 @@ def get_player_stats(team_id):
     playerstats_df = playerstats.get_data_frames()[1]
     playerstats_df["Player"] = playerstats_df["PLAYER_NAME"]
     return playerstats_df[["Player",'PTS','REB','AST','STL','BLK','FG_PCT','FG3_PCT','TOV']]
-
 
 
 
