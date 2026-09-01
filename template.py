@@ -65,7 +65,14 @@ def draw_court(fig):
     fig.update_yaxes(showgrid=False, zeroline=False, visible=False)
 
 
-def render_dashboard(team_id, team_name, primary_color, secondary_color):
+def render_dashboard(
+    team_id,
+    team_name,
+    primary_color,
+    secondary_color,
+    schedule_season,
+    analytics_season,
+):
     """
     Renders the full team dashboard including standings, shot chart,
     recent scores, lineup analysis, and player stats.
@@ -75,28 +82,33 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
         team_name (str): Full team name (e.g., 'Dallas Mavericks').
         primary_color (str): Team primary hex color for chart theming.
         secondary_color (str): Team secondary hex color for chart theming.
+        schedule_season (str): Season used for upcoming games.
+        analytics_season (str): Season used for team and player statistics.
     """
     
-    back_to_back = get_next_back_to_back(team_name)
-    playerstat = get_player_stats(team_id)
-    standings = league_standings_data(team_id)
-    lineup = get_lineup(team_id)
-    rating = ovr_rating(team_id)
-    record = standings['Record'].values[0]
-    rank = standings['PlayoffRank'].values[0]
-    if back_to_back is None:
-        back_to_back_date = "Season ended"
-    else:
+    back_to_back, back_to_back_status = get_next_back_to_back(
+        team_id, schedule_season
+    )
+    playerstat = get_player_stats(team_id, analytics_season)
+    standings = league_standings_data(team_id, analytics_season)
+    lineup = get_lineup(team_id, analytics_season)
+    rating = ovr_rating(team_id, analytics_season)
+    record = standings["Record"].iloc[0] if not standings.empty else "—"
+    rank = standings["PlayoffRank"].iloc[0] if not standings.empty else None
+    rank_label = f"#{rank}" if rank is not None else "—"
+    if back_to_back_status == "found":
         firstdate = back_to_back["Date"].dt.strftime("%m/%d").values[0]
         seconddate = back_to_back["Date"].dt.strftime("%m/%d").values[1]
         back_to_back_date = f'{firstdate} — {seconddate}'
-    netrating = rating["NET_RATING"]
-    recent_games = get_recent_scores(team_id)
-    made, miss = get_team_shot_data(team_id)
-    made_x = made["LOC_X"]
-    made_y = made["LOC_Y"]
-    miss_x = miss["LOC_X"]
-    miss_y = miss["LOC_Y"]
+    elif back_to_back_status == "season_complete":
+        back_to_back_date = "Season complete"
+    elif back_to_back_status == "no_back_to_back":
+        back_to_back_date = "None remaining"
+    else:
+        back_to_back_date = "Schedule unavailable"
+    netrating = rating["NET_RATING"].iloc[0] if not rating.empty else "—"
+    recent_games = get_recent_scores(team_id, analytics_season)
+    made, miss = get_team_shot_data(team_id, analytics_season)
     
     
     #Title/header
@@ -109,7 +121,10 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
         st.markdown(f"# {team_name}")
 
     with lineup_col:
-        st.table(lineup[["Plus Minus", "Line up"]].head(3), border="horizontal")
+        if lineup.empty:
+            st.info("Lineup data will appear after the season begins.")
+        else:
+            st.table(lineup[["Plus Minus", "Line up"]].head(3), border="horizontal")
 
     with card_col:
         with st.container(border=True):
@@ -117,7 +132,7 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
             record_col, rank_col = st.columns(2)
             b2b_col, rating_col = st.columns(2)
             record_col.metric("Record", record)
-            rank_col.metric("Rank", f"#{rank}")
+            rank_col.metric("Rank", rank_label)
             b2b_col.metric("Next Back to Back", back_to_back_date)
             rating_col.metric("Net Rating", netrating)
 
@@ -126,70 +141,75 @@ def render_dashboard(team_id, team_name, primary_color, secondary_color):
 
     with left_col:
         st.markdown("**Last 10 Games**",text_alignment="center")
-        fig = go.Figure()
+        if recent_games.empty:
+            st.info("Game results will appear after the season begins.")
+        else:
+            fig = go.Figure()
 
-        fig.add_trace(go.Bar(
-            x = recent_games['GAME_DATE'],
-            y = recent_games['PTS'],
-            name = 'Team Score',
-            marker_color = primary_color
-        ))
+            fig.add_trace(go.Bar(
+                x = recent_games['GAME_DATE'],
+                y = recent_games['PTS'],
+                name = 'Team Score',
+                marker_color = primary_color
+            ))
 
-        fig.add_trace(go.Bar(
-            x = recent_games['GAME_DATE'],
-            y = recent_games['oppscore'],
-            name ='Opponent Score',
-            marker_color = '#888888'         
-        ))
+            fig.add_trace(go.Bar(
+                x = recent_games['GAME_DATE'],
+                y = recent_games['oppscore'],
+                name ='Opponent Score',
+                marker_color = '#888888'
+            ))
 
-        fig.update_layout(
-            barmode = 'group',                
-            xaxis_title = 'Date',
-            yaxis_title = 'Points',
-            height = 420,                     
-            showlegend = True
-        )
+            fig.update_layout(
+                barmode = 'group',
+                xaxis_title = 'Date',
+                yaxis_title = 'Points',
+                height = 420,
+                showlegend = True
+            )
 
-        st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     
     with center_col:
         st.markdown("**Shot Map**", text_alignment="center")
-        fig = go.Figure()
+        if made.empty and miss.empty:
+            st.info("Shot data will appear after the season begins.")
+        else:
+            fig = go.Figure()
 
-        fig.add_trace(
-            go.Scatter(
-                x = made_x,
-                y = made_y,
-                mode="markers",
-                name="Made",
-                marker = dict(color=primary_color,opacity=0.5, line = dict(color = "white", width = 0.5))
+            fig.add_trace(
+                go.Scatter(
+                    x = made["LOC_X"],
+                    y = made["LOC_Y"],
+                    mode="markers",
+                    name="Made",
+                    marker = dict(color=primary_color,opacity=0.5, line = dict(color = "white", width = 0.5))
+                )
             )
-        )
 
-        fig.add_trace(
-            go.Scatter(
-                x = miss_x,
-                y = miss_y,
-                mode="markers",
-                name="Miss",
-                marker=dict(symbol='star',color=secondary_color,opacity=0.5)
+            fig.add_trace(
+                go.Scatter(
+                    x = miss["LOC_X"],
+                    y = miss["LOC_Y"],
+                    mode="markers",
+                    name="Miss",
+                    marker=dict(symbol='star',color=secondary_color,opacity=0.5)
+                )
             )
-        )
-        draw_court(fig)
+            draw_court(fig)
 
-        st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
-    player_col, right_col = st.columns([1,1])
+    player_col, _right_col = st.columns([1,1])
 
     with player_col:
-        option = st.selectbox(
-            "**Player Explorer**",
-            playerstat[['Player']]
-        )
+        if playerstat.empty:
+            st.markdown("**Player Explorer**")
+            st.info("Player statistics will appear after the season begins.")
+        else:
+            option = st.selectbox(
+                "**Player Explorer**",
+                playerstat["Player"].tolist()
+            )
 
-        st.table(playerstat.loc[playerstat["Player"] == option],border="horizontal")
-
-
-        
-    
-    
+            st.table(playerstat.loc[playerstat["Player"] == option],border="horizontal")

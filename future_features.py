@@ -1,18 +1,17 @@
 import pandas as pd
 import streamlit as st
+from data_fetcher import STATS_CACHE_TTL_SECONDS
 from nba_api.stats.endpoints import TeamGameLogs, LeagueStandings, TeamPlayerDashboard
 
-CURRENT_SEASON = "2025-26"
-
-@st.cache_data
+@st.cache_data(ttl=STATS_CACHE_TTL_SECONDS)
 #Calculates rolling net efficiency from advanced stats endpoint
-def get_rolling_efficiency(team_id, season='2025-26', window=5):
+def get_rolling_efficiency(team_id, season, window=5):
     """
     Calculates rolling net efficiency from advanced game logs.
 
     Args:
         team_id (int): NBA Stats team ID.
-        season (str): Season string in 'YYYY-YY' format. Defaults to '2025-26'.
+        season (str): Season string in 'YYYY-YY' format.
         window (int): Rolling average window size. Defaults to 5.
 
     Returns:
@@ -27,8 +26,8 @@ def get_rolling_efficiency(team_id, season='2025-26', window=5):
     return df[['GAME_DATE', 'NET_RATING', 'ROLLING_NET_RTG']]
 
 
-@st.cache_data
-def get_rank():
+@st.cache_data(ttl=STATS_CACHE_TTL_SECONDS)
+def get_rank(season):
     """
     Fetches current league standings split by conference.
 
@@ -36,14 +35,14 @@ def get_rank():
         tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
             (overall_standings, west_standings, east_standings).
     """
-    ranking = LeagueStandings(season="2025-26")
+    ranking = LeagueStandings(season=season)
     overall = ranking.get_data_frames()[0]
     west=overall[overall["Conference"] == "West"]
     east=overall[overall["Conference"] == "East"]
     return overall, west, east
 
-@st.cache_data
-def get_advanced_player_stats(team_id):
+@st.cache_data(ttl=STATS_CACHE_TTL_SECONDS)
+def get_advanced_player_stats(team_id, season):
     """
     Fetches advanced efficiency metrics for all players on a team.
 
@@ -53,6 +52,6 @@ def get_advanced_player_stats(team_id):
     Returns:
         pd.DataFrame: Columns ['PLAYER_NAME', 'GP', 'USG_PCT', 'TS_PCT'].
     """
-    stats = TeamPlayerDashboard(season="2025-26", team_id=team_id, measure_type_detailed_defense='Advanced')
+    stats = TeamPlayerDashboard(season=season, team_id=team_id, measure_type_detailed_defense='Advanced')
     stats_df = stats.get_data_frames()[1]
     return stats_df[['PLAYER_NAME','GP','USG_PCT','TS_PCT']]
